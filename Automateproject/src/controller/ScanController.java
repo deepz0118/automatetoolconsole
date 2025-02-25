@@ -1,26 +1,34 @@
 package controller;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.InputStream;
 
 public class ScanController {
     
     public boolean runNmapScan(String targetIP) {
         try {
-            Process process = new ProcessBuilder(
+            ProcessBuilder processBuilder = new ProcessBuilder(
                 "C:\\Program Files (x86)\\Nmap\\nmap.exe", "-sV", targetIP
-            ).start();
+            );
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
 
-            int exitCode = process.waitFor();
+            InputStream inputStream = process.getInputStream();
+            StringBuilder output = new StringBuilder();
+
             System.out.println("Scanning Target: " + targetIP);
-            System.out.println("Scan Completed with exit code: " + exitCode);
+            int data;
+            while ((data = inputStream.read()) != -1) {
+                output.append((char) data);
+            }
+            inputStream.close();
 
-            return exitCode == 0; 
+            String result = output.toString();
+            System.out.println(result);
 
+            return result.contains("vulnerable") || result.contains("CVE-");
         } catch (Exception e) {
             System.out.println("[X] Error running Nmap: " + e.getMessage());
             return false;
         }
     }
-
 }
